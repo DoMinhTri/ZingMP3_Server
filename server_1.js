@@ -9,53 +9,35 @@ const PORT = process.env.PORT || 5555;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-/**
- * STREAM_PCM – TÌM NHIỀU BÀI
- * http://ip:5555/stream_pcm?song=hello
- */
+// 1. Endpoint chính cho ESP32 (Giữ nguyên)
 app.get('/stream_pcm', async (req, res) => {
   try {
     const { song } = req.query;
-    if (!song) {
-      return res.status(400).json({ error: 'Missing song parameter' });
-    }
+    if (!song) return res.status(400).json({ error: 'Missing song parameter' });
 
     const searchData = await ZingMp3.search(String(song));
+    const items      = searchData?.data?.items || searchData?.data?.songs || [];
+    const firstSong  = items.find(item => item.targetType === 'song' || item.encodeId);
 
-    const items =
-      searchData?.data?.items?.filter(i => i.resourceType === 'song') ||
-      searchData?.data?.songs ||
-      [];
+    if (!firstSong) return res.status(404).json({ error: 'Song not found' });
 
-    if (!items.length) {
-      return res.status(404).json({ total: 0, songs: [] });
-    }
-
-    const songs = items.map(item => {
-      const id = item.encodeId || item.id;
-
-      return {
-        title: item.title,
-        artist: item.artistsNames || "Unknown",
-        audio_url: `/proxy_audio?id=${id}`,
-        lyric_url: `/proxy_lyric?id=${id}`,
-        thumbnail: item.thumbnail || item.thumbnailM || null,
-        duration: item.duration || 0,
-        language: "unknown"
-      };
-    });
+    const songId = firstSong.encodeId || firstSong.id;
 
     res.json({
-      total: songs.length,
-      songs
+      title: firstSong.title,
+      artist: firstSong.artistsNames || firstSong.artists?.[0]?.name || "Unknown",
+      audio_url: `/proxy_audio?id=${songId}`,
+      lyric_url: `/proxy_lyric?id=${songId}`,
+      thumbnail: firstSong.thumbnail || firstSong.thumbnailM,
+      duration: firstSong.duration,
+      language: "unknown"
     });
-
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
-/* =================== PROXY AUDIO =================== */
+// 2. Endpoint Proxy Audio (Giữ nguyên)
 app.get('/proxy_audio', async (req, res) => {
   try {
     const { id } = req.query;
@@ -75,16 +57,13 @@ app.get('/proxy_audio', async (req, res) => {
     res.setHeader('Content-Type', 'audio/mpeg');
     response.data.pipe(res);
 
-    req.on('close', () => {
-      if (response.data) response.data.destroy();
-    });
-
+    req.on('close', () => { if (response.data) response.data.destroy(); });
   } catch (e) {
     res.status(500).send(e.message);
   }
 });
 
-/* =================== API CHO WEB =================== */
+// 3. Các API bổ sung cho giao diện Web (Để các nút bấm hoạt động)
 app.get('/api/search', async (req, res) => {
   try {
     res.json(await ZingMp3.search(String(req.query.q)));
@@ -126,5 +105,5 @@ app.get('/proxy_lyric', async (req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });

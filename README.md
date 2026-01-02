@@ -1,21 +1,27 @@
 # ZingMp3 API
 
 ## Giới thiệu
-Dự án cung cấp các hàm gọi API Zing MP3 kèm server Express và UI HTML đơn giản để test nhanh.
-- Thư viện chính: `src/index.ts` (đã build sẵn sang `dist/index.js`)
-- Server test: `server.js` (proxy tới Zing)
-- UI test: `public/index.html`
+Dự án cung cấp API Zing MP3 với server Express và UI HTML để test nhanh.
 
-## Yêu cầu môi trường
-- Node.js 16+ (khuyên dùng bản LTS mới)
-- Kết nối mạng ổn định
+## Cài đặt và chạy Server
 
-## Cài đặt và chạy
-```bash
-npm install
-npm start
-```
-Mặc định server chạy tại: `http://localhost:5555`
+1. **Cài đặt phần mềm**
+   ```bash
+   Tải phần mềm chạy nodeJS cho Window
+   ```
+
+2. **Vào thư mục dự án** (nếu chưa vào)
+   ```bash
+   Mở nodeJS command prompt
+   Dùng lệnh CD đường dẫn thu mục để duy chuyển vào thư mục
+   cd ZingMP3_Server
+   ```
+
+3. **Chạy server**
+   - Dùng lệnh `node server.js` để chạy server  
+   - Tìm 1 bài hát: `node server_1.js`
+   - Tìm tất cả bài hát cùng tên: `node server_total.js`
+   
 
 ## UI kiểm thử
 Mở trình duyệt tới: `http://localhost:5555/`
